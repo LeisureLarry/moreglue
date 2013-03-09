@@ -2,15 +2,15 @@
 
 namespace MoreGlue\Doctrine\Tools\Console\Command;
 
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Output\Output;
-use Symfony\Component\Console\Command\Command;
-use Doctrine\Common\DataFixtures\Loader as FixturesLoader;
-use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
-use Doctrine\Common\DataFixtures\Purger\ORMPurger;
-use InvalidArgumentException;
+use \Symfony\Component\Console\Input\InputOption;
+use \Symfony\Component\Console\Input\InputInterface;
+use \Symfony\Component\Console\Output\OutputInterface;
+use \Symfony\Component\Console\Output\Output;
+use \Symfony\Component\Console\Command\Command;
+use \Doctrine\Common\DataFixtures\Loader as FixturesLoader;
+use \Doctrine\Common\DataFixtures\Executor\ORMExecutor;
+use \Doctrine\Common\DataFixtures\Purger\ORMPurger;
+use \InvalidArgumentException;
 
 class FixtureCommand extends Command
 {

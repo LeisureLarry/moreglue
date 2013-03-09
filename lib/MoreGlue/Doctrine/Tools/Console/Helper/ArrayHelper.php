@@ -2,7 +2,7 @@
 
 namespace MoreGlue\Doctrine\Tools\Console\Helper;
 
-use Symfony\Component\Console\Helper\Helper;
+use \Symfony\Component\Console\Helper\Helper;
 
 class ArrayHelper extends Helper
 {
