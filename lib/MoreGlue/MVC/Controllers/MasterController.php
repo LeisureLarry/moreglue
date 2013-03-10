@@ -7,54 +7,29 @@ use \Monolog\Handler\FirePHPHandler, \Monolog\Logger;
 class MasterController
 {
     protected $_bootstrap;
-    protected $_matches;
+    protected $_twig;
     protected $_logger;
     protected $_view;
     protected $_context = array();
 
-    public function __construct($bootstrap, $matcher, $matches)
+    public function __construct($bootstrap, $twig)
     {
         $this->_bootstrap = $bootstrap;
-        $this->_matches = $matches;
-        $this->_logger = $this->_initLogging();
+        $this->_twig = $twig;
+
+        $this->_initLogging();
     }
 
     protected  function _initLogging()
     {
         $firephp = new FirePHPHandler();
-        $logger = new Logger('Monolog Logger');
-        $logger->pushHandler($firephp);
-
-        return $logger;
-    }
-
-    public function logDebug($message, $context)
-    {
-        $this->_logger->addDebug($message, (array)$context);
+        $this->_logger = new Logger('Monolog Logger');
+        $this->_logger->pushHandler($firephp);
     }
 
     public function getEm()
     {
         return $this->_bootstrap->getEm();
-    }
-
-    public function getTwig()
-    {
-        $srcPath = $this->_bootstrap->getOption('src_path');
-        $libPath = dirname(__DIR__) . '/Views';
-
-        $loader = new \Twig_Loader_Filesystem(
-            array($libPath)
-        );
-
-        $loader->addPath(
-            $srcPath . '/' . ucfirst($this->_matches['src']) . '/Views',
-            ucfirst($this->_matches['src'])
-        );
-
-        $twig = new \Twig_Environment($loader, array('debug' => $this->_bootstrap->isDebug()));
-        $twig->addExtension(new \MoreGlue\Twig\Extension\RouteFilters());
-        return $twig;
     }
 
     public function setView($view)
@@ -75,6 +50,11 @@ class MasterController
         return $namespace . '/' . $template;
     }
 
+    public function logDebug($message, $context)
+    {
+        $this->_logger->addDebug($message, (array)$context);
+    }
+
     public function execute($actionName)
     {
         $this->setView($this->_matches['action']);
@@ -85,7 +65,7 @@ class MasterController
 
     public function render()
     {
-        return $this->getTwig()->render(
+        return $this->_twig->render(
             $this->getTemplate(),
             $this->_context
         );

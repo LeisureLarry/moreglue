@@ -26,7 +26,8 @@
         "doctrine/migrations": ">=v1.0-ALPHA1",
         "doctrine/data-fixtures": ">=v1.0.0-ALPHA3",
         "webmasters/doctrine-extensions": ">=2.3.3",
-        "twig/twig": ">=v1.12.2"
+        "twig/twig": ">=v1.12.2",
+        "symfony/twig-bridge": ">=v2.2.0"
     },
     "autoload": {
         "psr-0": { "MoreGlue": "lib/" }

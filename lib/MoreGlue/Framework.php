@@ -11,6 +11,7 @@ class Framework
 {
     protected $_bootstrap;
     protected $_srcPath;
+    protected $_context;
     protected $_matcher;
 
     public function __construct()
@@ -44,10 +45,13 @@ class Framework
 
     public function getContext()
     {
-        $context = new Routing\RequestContext();
-        $context->fromRequest($this->_request);
+        if (empty($this->_context)) {
+            $context = new Routing\RequestContext();
+            $context->fromRequest($this->_request);
+            $this->_context = $context;
+        }
 
-        return $context;
+        return $this->_context;
     }
 
     public function dispatch()
@@ -87,7 +91,7 @@ class Framework
         $namespacedControllerName = ucfirst($matches['src']) . '\\Controllers\\' . $controllerName;
 
         if (class_exists($namespacedControllerName, false)) {
-            $controller = new $namespacedControllerName($this->_bootstrap, $this->_matcher, $matches);
+            $controller = new $namespacedControllerName($this->_bootstrap, $this->getTwig($matches));
         } else {
             throw new Routing\Exception\ResourceNotFoundException(
                 sprintf("Controller class '%s' missing", $namespacedControllerName)
@@ -103,5 +107,30 @@ class Framework
         }
 
         return $output;
+    }
+
+    public function getTwig($matches)
+    {
+        $srcPath = $this->_bootstrap->getOption('src_path');
+        $libPath = __DIR__ . '/MVC/Views';
+
+        $loader = new \Twig_Loader_Filesystem(
+            array($libPath)
+        );
+
+        $loader->addPath(
+            $srcPath . '/' . ucfirst($matches['src']) . '/Views',
+            ucfirst($matches['src'])
+        );
+
+        $twig = new \Twig_Environment($loader, array('debug' => $this->_bootstrap->isDebug()));
+
+        // Activate RoutingExtension from "symfony/twig-bridge"
+        $generator = new Routing\Generator\UrlGenerator($this->getRoutes(), $this->getContext());
+        $twig->addExtension(
+            new \Symfony\Bridge\Twig\Extension\RoutingExtension($generator)
+        );
+
+        return $twig;
     }
 }
