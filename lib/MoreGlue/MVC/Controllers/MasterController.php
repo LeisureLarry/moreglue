@@ -7,29 +7,30 @@ use \Monolog\Handler\FirePHPHandler, \Monolog\Logger;
 class MasterController
 {
     protected $_bootstrap;
-    protected $_route;
-    protected $_context;
+    protected $_matches;
+    protected $_logger;
     protected $_view;
+    protected $_context = array();
 
-    public function __construct($bootstrap, $router, $route)
+    public function __construct($bootstrap, $matcher, $matches)
     {
         $this->_bootstrap = $bootstrap;
-        $this->_route = $route;
+        $this->_matches = $matches;
+        $this->_logger = $this->_initLogging();
+    }
 
-        // Init Logging
+    protected  function _initLogging()
+    {
         $firephp = new FirePHPHandler();
-        $logger = new Logger('LoggingChain');
+        $logger = new Logger('Monolog Logger');
         $logger->pushHandler($firephp);
 
-        // Log Route Values
-        $logger->addDebug('Route dispatch values', $route->dispatchValues());
-        $logger->addDebug('Route wildcard values', $route->wildcardArgs());
+        return $logger;
+    }
 
-        // Prefill Twig Context
-        $this->_context = array(
-            'router' => $router,
-            'logger' => $logger
-        );
+    public function logDebug($message, $context)
+    {
+        $this->_logger->addDebug($message, (array)$context);
     }
 
     public function getEm()
@@ -47,8 +48,8 @@ class MasterController
         );
 
         $loader->addPath(
-            $srcPath . '/' . $this->_route->src . '/views',
-            $this->_route->src
+            $srcPath . '/' . ucfirst($this->_matches['src']) . '/Views',
+            ucfirst($this->_matches['src'])
         );
 
         $twig = new \Twig_Environment($loader, array('debug' => $this->_bootstrap->isDebug()));
@@ -68,21 +69,23 @@ class MasterController
 
     public function getTemplate()
     {
-        $template = ucfirst($this->_route->controller) . '/' . $this->getView();
-        $namespace = '@' . $this->_route->src;
+        $template = ucfirst($this->_matches['controller']) . '/' . $this->getView();
+        $namespace = '@' . ucfirst($this->_matches['src']);
 
         return $namespace . '/' . $template;
     }
 
     public function execute($actionName)
     {
-        $this->setView($this->_route->action);
+        $this->setView($this->_matches['action']);
         $this->$actionName();
+
+        return $this->render();
     }
 
     public function render()
     {
-        echo $this->getTwig()->render(
+        return $this->getTwig()->render(
             $this->getTemplate(),
             $this->_context
         );
