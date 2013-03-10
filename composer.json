@@ -4,8 +4,8 @@
     "description": "Micro framework",
     "keywords": [
         "doctrine2",
-        "migrations",
-        "fixtures"
+        "twig",
+        "framework"
     ],
     "homepage": "http://github.com/LeisureLarry/moreglue",
     "license": "MIT",
@@ -18,10 +18,15 @@
     ],
     "require": {
         "php":">=5.3.7",
+        "symfony/http-foundation": ">=v2.2.0",
+        "symfony/routing": ">=v2.2.0",
+        "symfony/http-kernel": ">=v2.2.0",
+        "monolog/monolog": ">=1.4.0",
         "doctrine/orm":">=2.3.2",
         "doctrine/migrations": ">=v1.0-ALPHA1",
         "doctrine/data-fixtures": ">=v1.0.0-ALPHA3",
-        "webmasters/doctrine-extensions": ">=2.3.3"
+        "webmasters/doctrine-extensions": ">=2.3.3",
+        "twig/twig": ">=v1.12.2"
     },
     "autoload": {
         "psr-0": { "MoreGlue": "lib/" }

@@ -4,6 +4,6 @@
 
 ### Features
 
-- Doctrine 2
-- Doctrine Migrations
-- Doctrine Fixtures
+- Symfony Routing
+- Doctrine 2 (Migrations/Fixtures)
+- Twig
