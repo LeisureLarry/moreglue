@@ -13,12 +13,18 @@ class Framework
     protected $_srcPath;
     protected $_context;
     protected $_matcher;
+    protected $_matches;
 
     public function __construct()
     {
         $this->_bootstrap = Bootstrap::getInstance();
         $this->_srcPath = $this->_bootstrap->getOption('src_path');
         $this->_request = Request::createFromGlobals();
+    }
+
+    public function getBootstrap()
+    {
+        return $this->_bootstrap;
     }
 
     public function getRoutes()
@@ -59,10 +65,7 @@ class Framework
         $this->_matcher = new Routing\Matcher\UrlMatcher($this->getRoutes(), $this->getContext());
 
         try {
-            $matches = $this->_matcher->match($this->_request->getPathInfo());
-
-            ob_start();
-            $output = $this->execute($matches);
+            $output = $this->match();
             $response = new Response($output);
         } catch (Routing\Exception\ResourceNotFoundException $e) {
             $response = new Response('Not Found', 404);
@@ -73,8 +76,11 @@ class Framework
         $response->send();
     }
 
-    public function execute($matches)
+    public function match()
     {
+        $matches = $this->_matcher->match($this->_request->getPathInfo());
+        $this->_matches = $matches;
+
         $controllerName = ucfirst($matches['controller']) . 'Controller';
         $actionName = ucfirst($matches['action']) . 'Action';
 
@@ -91,7 +97,7 @@ class Framework
         $namespacedControllerName = ucfirst($matches['src']) . '\\Controllers\\' . $controllerName;
 
         if (class_exists($namespacedControllerName, false)) {
-            $controller = new $namespacedControllerName($this->_bootstrap, $this->getTwig($matches));
+            $controller = new $namespacedControllerName($this);
         } else {
             throw new Routing\Exception\ResourceNotFoundException(
                 sprintf("Controller class '%s' missing", $namespacedControllerName)
@@ -109,27 +115,43 @@ class Framework
         return $output;
     }
 
-    public function getTwig($matches)
+    public function getMatches()
+    {
+        return $this->_matches;
+    }
+
+    public function getTwig()
     {
         $srcPath = $this->_bootstrap->getOption('src_path');
         $libPath = __DIR__ . '/MVC/Views';
+
+        $isDebug = $this->_bootstrap->isDebug();
 
         $loader = new \Twig_Loader_Filesystem(
             array($libPath)
         );
 
-        $loader->addPath(
-            $srcPath . '/' . ucfirst($matches['src']) . '/Views',
-            ucfirst($matches['src'])
-        );
+        $src = $this->getBootstrap()->getOption('src');
+        foreach ($src as $app) {
+            $loader->addPath(
+                $srcPath . '/' . $app . '/Views',
+                $app
+            );
+        }
 
-        $twig = new \Twig_Environment($loader, array('debug' => $this->_bootstrap->isDebug()));
+        $twig = new \Twig_Environment($loader, array('debug' => $isDebug));
 
         // Activate RoutingExtension from "symfony/twig-bridge"
         $generator = new Routing\Generator\UrlGenerator($this->getRoutes(), $this->getContext());
         $twig->addExtension(
             new \Symfony\Bridge\Twig\Extension\RoutingExtension($generator)
         );
+
+        if ($isDebug) {
+            $twig->addExtension(
+                new \Twig_Extension_Debug()
+            );
+        }
 
         return $twig;
     }

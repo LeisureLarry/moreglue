@@ -6,17 +6,14 @@ use \Monolog\Handler\FirePHPHandler, \Monolog\Logger;
 
 class MasterController
 {
-    protected $_bootstrap;
-    protected $_twig;
+    protected $_framework;
     protected $_logger;
     protected $_view;
     protected $_context = array();
 
-    public function __construct($bootstrap, $twig)
+    public function __construct($framework)
     {
-        $this->_bootstrap = $bootstrap;
-        $this->_twig = $twig;
-
+        $this->_framework = $framework;
         $this->_initLogging();
     }
 
@@ -27,9 +24,29 @@ class MasterController
         $this->_logger->pushHandler($firephp);
     }
 
+    public function getFramework()
+    {
+        return $this->_framework;
+    }
+
+    public function getBootstrap()
+    {
+        return $this->getFramework()->getBootstrap();
+    }
+
     public function getEm()
     {
-        return $this->_bootstrap->getEm();
+        return $this->getBootstrap()->getEm();
+    }
+
+    public function getMatches()
+    {
+        return $this->getFramework()->getMatches();
+    }
+
+    public function getTwig()
+    {
+        return $this->getFramework()->getTwig();
     }
 
     public function setView($view)
@@ -42,10 +59,22 @@ class MasterController
         return $this->_view . '.html.twig';
     }
 
+    public function addContext($name, $value)
+    {
+        $this->_context[$name] = $value;
+    }
+
+    public function getContext()
+    {
+        return $this->_context;
+    }
+
     public function getTemplate()
     {
-        $template = ucfirst($this->_matches['controller']) . '/' . $this->getView();
-        $namespace = '@' . ucfirst($this->_matches['src']);
+        $matches = $this->getMatches();
+
+        $template = ucfirst($matches['controller']) . '/' . $this->getView();
+        $namespace = '@' . ucfirst($matches['src']);
 
         return $namespace . '/' . $template;
     }
@@ -57,7 +86,9 @@ class MasterController
 
     public function execute($actionName)
     {
-        $this->setView($this->_matches['action']);
+        $matches = $this->getMatches();
+
+        $this->setView($matches['action']);
         $this->$actionName();
 
         return $this->render();
@@ -65,9 +96,9 @@ class MasterController
 
     public function render()
     {
-        return $this->_twig->render(
+        return $this->getTwig()->render(
             $this->getTemplate(),
-            $this->_context
+            $this->getContext()
         );
     }
 }
