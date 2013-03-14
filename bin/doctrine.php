@@ -26,20 +26,23 @@ if (file_exists($configFile)) {
 $helperSet = ($helperSet) ?: new \Symfony\Component\Console\Helper\HelperSet();
 
 // Replacement for ConsoleRunner::run():
-use Symfony\Component\Console\Application;
-$cli = new Application('Doctrine Command Line Interface', \Doctrine\ORM\Version::VERSION);
+$cli = new Symfony\Component\Console\Application(
+    'Doctrine Command Line Interface',
+    \Doctrine\ORM\Version::VERSION
+);
 $cli->setCatchExceptions(true);
 $cli->setHelperSet($helperSet);
 
-// Register all Doctrine commands
+// Register all default Doctrine commands
 Doctrine\ORM\Tools\Console\ConsoleRunner::addCommands($cli);
 
-// Migrations commands
+// Add custom commands
 $cli->addCommands(array(
    new MoreGlue\Doctrine\Tools\Console\Command\DiffCommand(),
    new MoreGlue\Doctrine\Tools\Console\Command\MigrateCommand(),
    new MoreGlue\Doctrine\Tools\Console\Command\StatusCommand(),
-   new MoreGlue\Doctrine\Tools\Console\Command\FixtureCommand()
+   new MoreGlue\Doctrine\Tools\Console\Command\FixtureCommand(),
+   new MoreGlue\Symfony\Tools\Console\Command\PhpStormCommand()
 ));
 
 // Runs console application

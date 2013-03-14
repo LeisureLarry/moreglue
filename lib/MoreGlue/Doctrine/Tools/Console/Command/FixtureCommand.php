@@ -12,6 +12,10 @@ use \Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use \Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use \InvalidArgumentException;
 
+/*
+ * A fork of the SymfonyBundle doctrine/DoctrineFixturesBundle adapted for MoreGlue
+ * https://github.com/doctrine/DoctrineFixturesBundle
+ */
 class FixtureCommand extends Command
 {
     protected function configure()
