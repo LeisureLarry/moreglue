@@ -1,0 +1,46 @@
+<?php
+
+$vendorPath = realpath(__DIR__ . '/../../..');
+
+@include_once $vendorPath . '/autoload.php';
+$configFile = $vendorPath . '/../config/cli.cfg.php';
+
+$helperSet = null;
+if (file_exists($configFile)) {
+    if ( ! is_readable($configFile)) {
+        trigger_error(
+            'Configuration file [' . $configFile . '] does not have read permission.', E_ERROR
+        );
+    }
+
+    require $configFile;
+
+    foreach ($GLOBALS as $helperSetCandidate) {
+        if ($helperSetCandidate instanceof \Symfony\Component\Console\Helper\HelperSet) {
+            $helperSet = $helperSetCandidate;
+            break;
+        }
+    }
+}
+
+$helperSet = ($helperSet) ?: new \Symfony\Component\Console\Helper\HelperSet();
+
+// Replacement for ConsoleRunner::run():
+use Symfony\Component\Console\Application;
+$cli = new Application('Doctrine Command Line Interface', \Doctrine\ORM\Version::VERSION);
+$cli->setCatchExceptions(true);
+$cli->setHelperSet($helperSet);
+
+// Register all Doctrine commands
+Doctrine\ORM\Tools\Console\ConsoleRunner::addCommands($cli);
+
+// Migrations commands
+$cli->addCommands(array(
+   new MoreGlue\Doctrine\Tools\Console\Command\DiffCommand(),
+   new MoreGlue\Doctrine\Tools\Console\Command\MigrateCommand(),
+   new MoreGlue\Doctrine\Tools\Console\Command\StatusCommand(),
+   new MoreGlue\Doctrine\Tools\Console\Command\FixtureCommand()
+));
+
+// Runs console application
+$cli->run();

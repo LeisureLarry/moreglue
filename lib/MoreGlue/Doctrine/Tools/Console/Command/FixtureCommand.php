@@ -21,7 +21,7 @@ class FixtureCommand extends Command
             ->setDescription('Load data fixtures to your database.')
             ->addOption('fixtures', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'The directory or file to load data fixtures from.')
             ->addOption('append', null, InputOption::VALUE_NONE, 'Append the data fixtures instead of deleting all data from the database first.')
-            ->addOption('purge-without-truncate', null, InputOption::VALUE_NONE, 'Purge data without using a database-level TRUNCATE statement')
+            ->addOption('purge-with-truncate', null, InputOption::VALUE_NONE, 'Purge data with using a database-level TRUNCATE statement')
             ->setHelp(<<<EOT
 The <info>%command.name%</info> command loads data fixtures from your bundles:
 
@@ -35,10 +35,10 @@ If you want to append the fixtures instead of flushing the database first you ca
 
   <info>%command.full_name% --append</info>
 
-By default Doctrine Data Fixtures uses a TRUNCATE statement to drop the existing rows from the database.
-If you want to use DELETE statements instead you can use the <info>--purge-without-truncate</info> flag:
+By default Doctrine Data Fixtures uses DELETE statements to drop the existing rows from the database.
+If you want to use a TRUNCATE statement instead you can use the <info>--purge-with-truncate</info> flag:
 
-  <info>%command.full_name% --purge-without-truncate</info>
+  <info>%command.full_name% --purge-with-truncate</info>
 EOT
         );
     }
@@ -59,7 +59,7 @@ EOT
                 throw new \InvalidArgumentException('The specified option "fixtures" is not a valid path.');
             }
         } elseif ($helper = $this->getHelper('fixtures')) {
-            $path = $helper->getArg('path');
+            $path = $helper->getPath();
             if (!is_dir($path)) {
                 throw new \InvalidArgumentException('The specified helper "fixtures" is not a valid path.');
             }
@@ -76,7 +76,7 @@ EOT
         }
 
         $purger = new ORMPurger($em);
-        $purger->setPurgeMode($input->getOption('purge-without-truncate') ? ORMPurger::PURGE_MODE_DELETE : ORMPurger::PURGE_MODE_TRUNCATE);
+        $purger->setPurgeMode($input->getOption('purge-with-truncate') ? ORMPurger::PURGE_MODE_TRUNCATE : ORMPurger::PURGE_MODE_DELETE);
         $executor = new ORMExecutor($em, $purger);
         $executor->setLogger(function($message) use ($output) {
             $output->writeln(sprintf('  <comment>></comment> <info>%s</info>', $message));

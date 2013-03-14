@@ -10,21 +10,24 @@ use \Webmasters\Doctrine\Bootstrap;
 class Framework
 {
     protected $_bootstrap;
-    protected $_srcPath;
     protected $_context;
     protected $_matcher;
     protected $_matches;
 
-    public function __construct()
+    public function __construct($bootstrap)
     {
-        $this->_bootstrap = Bootstrap::getInstance();
-        $this->_srcPath = $this->_bootstrap->getOption('src_path');
+        $this->_bootstrap = $bootstrap;
         $this->_request = Request::createFromGlobals();
     }
 
     public function getBootstrap()
     {
         return $this->_bootstrap;
+    }
+
+    public function getSourcePath()
+    {
+        return $this->getBootstrap()->getOption('src_path');
     }
 
     public function getRoutes()
@@ -60,61 +63,6 @@ class Framework
         return $this->_context;
     }
 
-    public function dispatch()
-    {
-        $this->_matcher = new Routing\Matcher\UrlMatcher($this->getRoutes(), $this->getContext());
-
-        try {
-            $output = $this->match();
-            $response = new Response($output);
-        } catch (Routing\Exception\ResourceNotFoundException $e) {
-            $response = new Response('Not Found', 404);
-        } catch (Exception $e) {
-            $response = new Response('An error occurred', 500);
-        }
-
-        $response->send();
-    }
-
-    public function match()
-    {
-        $matches = $this->_matcher->match($this->_request->getPathInfo());
-        $this->_matches = $matches;
-
-        $controllerName = ucfirst($matches['controller']) . 'Controller';
-        $actionName = ucfirst($matches['action']) . 'Action';
-
-        $controllerFile = $this->_srcPath . '/' . ucfirst($matches['src']) . '/Controllers/' . $controllerName . '.php';
-
-        if (file_exists($controllerFile)) {
-            require_once $controllerFile;
-        } else {
-            throw new Routing\Exception\ResourceNotFoundException(
-                sprintf("Controller file '%s' missing", $controllerFile)
-            );
-        }
-
-        $namespacedControllerName = ucfirst($matches['src']) . '\\Controllers\\' . $controllerName;
-
-        if (class_exists($namespacedControllerName, false)) {
-            $controller = new $namespacedControllerName($this);
-        } else {
-            throw new Routing\Exception\ResourceNotFoundException(
-                sprintf("Controller class '%s' missing", $namespacedControllerName)
-            );
-        }
-
-        if (method_exists($namespacedControllerName, $actionName)) {
-            $output = $controller->execute($actionName);
-        } else {
-            throw new Routing\Exception\ResourceNotFoundException(
-                sprintf("Action method '%s' missing in controller class '%s'", $actionName, $namespacedControllerName)
-            );
-        }
-
-        return $output;
-    }
-
     public function getMatches()
     {
         return $this->_matches;
@@ -122,7 +70,7 @@ class Framework
 
     public function getTwig()
     {
-        $srcPath = $this->_bootstrap->getOption('src_path');
+        $srcPath = $this->getSourcePath();
         $libPath = __DIR__ . '/MVC/Views';
 
         $isDebug = $this->_bootstrap->isDebug();
@@ -154,5 +102,61 @@ class Framework
         }
 
         return $twig;
+    }
+
+    public function match()
+    {
+        $matches = $this->_matcher->match($this->_request->getPathInfo());
+        $this->_matches = $matches;
+
+        $controllerName = ucfirst($matches['controller']) . 'Controller';
+        $actionName = ucfirst($matches['action']) . 'Action';
+
+        $srcPath = $this->getSourcePath();
+        $controllerFile = $srcPath . '/' . ucfirst($matches['src']) . '/Controllers/' . $controllerName . '.php';
+
+        if (file_exists($controllerFile)) {
+            require_once $controllerFile;
+        } else {
+            throw new Routing\Exception\ResourceNotFoundException(
+                sprintf("Controller file '%s' missing", $controllerFile)
+            );
+        }
+
+        $namespacedControllerName = ucfirst($matches['src']) . '\\Controllers\\' . $controllerName;
+
+        if (class_exists($namespacedControllerName, false)) {
+            $controller = new $namespacedControllerName($this);
+        } else {
+            throw new Routing\Exception\ResourceNotFoundException(
+                sprintf("Controller class '%s' missing", $namespacedControllerName)
+            );
+        }
+
+        if (method_exists($namespacedControllerName, $actionName)) {
+            $output = $controller->execute($actionName);
+        } else {
+            throw new Routing\Exception\ResourceNotFoundException(
+                sprintf("Action method '%s' missing in controller class '%s'", $actionName, $namespacedControllerName)
+            );
+        }
+
+        return $output;
+    }
+
+    public function dispatch()
+    {
+        $this->_matcher = new Routing\Matcher\UrlMatcher($this->getRoutes(), $this->getContext());
+
+        try {
+            $output = $this->match();
+            $response = new Response($output);
+        } catch (Routing\Exception\ResourceNotFoundException $e) {
+            $response = new Response('Not Found', 404);
+        } catch (Exception $e) {
+            $response = new Response('An error occurred', 500);
+        }
+
+        return $response;
     }
 }
