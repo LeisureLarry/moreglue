@@ -1,0 +1,1 @@
+php vendor/interiete/moreglue/bin/console phpstorm:command:config > C:\Users\Level2\.WebIde60\config\commandlinetools\MoreGlue.xml

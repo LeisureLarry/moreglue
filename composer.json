@@ -23,6 +23,7 @@
         "symfony/http-kernel": ">=v2.2.0",
         "monolog/monolog": ">=1.4.0",
         "doctrine/orm":">=2.3.2",
+        "doctrine/doctrine-bundle": ">=v1.2.0-beta1",
         "doctrine/migrations": ">=v1.0-ALPHA1",
         "doctrine/data-fixtures": ">=v1.0.0-ALPHA3",
         "webmasters/doctrine-extensions": ">=2.3.3",
