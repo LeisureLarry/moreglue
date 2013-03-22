@@ -27,30 +27,35 @@ class Framework
     protected function __construct($connectionOptions, $applicationOptions)
     {
         $this->_connectionOptions = $connectionOptions;
-        $this->_applicationOptions = $applicationOptions;
+
+        $vendorDir = realpath(__DIR__ . '/../../../..');
+        $baseDir = dirname($vendorDir);
+        $srcDir = $baseDir . '/src';
+
+        $defaultApp = array(
+            'vendorDir' => $vendorDir,
+            'baseDir' => $baseDir,
+            'srcDir' => $srcDir
+        );
+        $this->_applicationOptions = $defaultApp + $applicationOptions;
     }
 
-    public function getBootstrap()
+    protected function __clone()
     {
-        if ($this->_bootstrap === null) {
-            $this->_bootstrap = Bootstrap::getInstance($this->_connectionOptions, $this->_applicationOptions);
-        }
-
-        return $this->_bootstrap;
-    }
-
-    public function getEntityManager()
-    {
-        return $this->getBootstrap()->getEm();
     }
 
     public function getApplication()
     {
         if ($this->_application === null) {
-            $this->_application = new Application($this);
+            $this->_application = Application::getInstance($this->_connectionOptions, $this->_applicationOptions);
         }
 
         return $this->_application;
+    }
+
+    public function getEntityManager()
+    {
+        return $this->getApplication()->getKernel()->getContainer()->get('doctrine.em');
     }
 
     public function dispatchApplication()
