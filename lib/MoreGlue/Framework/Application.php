@@ -27,21 +27,23 @@ class Application
     protected function __construct($connectionOptions, $applicationOptions)
     {
         $this->_kernel = Kernel::getInstance($connectionOptions, $applicationOptions);
+        $this->_container = $this->_kernel->getContainer();
+
+        $applicationOptions = $this->_container->get('options.application');
+        $this->_container->get('doctrine.bootstrap')->setOption('src_dir', $applicationOptions->get('base_dir') . '/src');
+        $vendorDir = $applicationOptions->get('vendor_dir');
 
         \Doctrine\Common\Annotations\AnnotationRegistry::registerFile(
-            $applicationOptions['vendorDir'] . '/symfony/routing/Symfony/Component/Routing/Annotation/Route.php'
+            $vendorDir . '/symfony/routing/Symfony/Component/Routing/Annotation/Route.php'
         );
         \Doctrine\Common\Annotations\AnnotationRegistry::registerFile(
-            $applicationOptions['vendorDir'] . '/mnapoli/php-di/src/DI/Annotations/Inject.php'
+            $vendorDir . '/mnapoli/php-di/src/DI/Annotations/Inject.php'
         );
-
-        $this->_container = $this->getKernel()->getContainer();
-        $applicationOptions = $this->_container->get('applicationOptions');
 
         $annotationReader = new CachedMetadataReader(
             new DefaultMetadataReader(),
             $this->_container->get('doctrine.cache'),
-            $applicationOptions['debug_mode']
+            $applicationOptions->get('debug_mode')
         );
 
         $this->_container->setMetadataReader($annotationReader);

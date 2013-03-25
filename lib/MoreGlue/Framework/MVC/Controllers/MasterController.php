@@ -2,59 +2,72 @@
 
 namespace MoreGlue\Framework\MVC\Controllers;
 
-use \Monolog\Handler\FirePHPHandler;
-use \Monolog\Logger;
+use \DI\Annotations\Inject;
 use \Symfony\Bridge\Twig\Extension\RoutingExtension;
 use \Symfony\Component\HttpFoundation\Response;
 use \Symfony\Component\HttpFoundation\RedirectResponse;
+use \MoreGlue\Framework\MVC\Views\View;
 
 class MasterController
 {
-    protected $_application;
+    /**
+     * @Inject("request")
+     */
+    protected $_request;
+
+    /**
+     * @Inject("router.matches")
+     */
+    protected $_matches;
+
+    /**
+     * @Inject("doctrine.em")
+     */
+    protected $_em;
+
+    /**
+     * @Inject("router.generator.url", lazy=true)
+     */
+    protected $_urlGenerator;
+
+    /**
+     * @Inject("logger", lazy=true)
+     */
     protected $_logger;
+
+    /**
+     * @Inject("twig", lazy=true)
+     */
+    protected $_twig;
+
     protected $_view;
     protected $_redirect;
-    protected $_context = array();
-
-    public function __construct($application)
-    {
-        $this->_application = $application;
-    }
-
-    public function getApplication()
-    {
-        return $this->_application;
-    }
-
-    protected  function getLogger()
-    {
-        if (empty($this->_logger)) {
-            $firephp = new FirePHPHandler();
-            $this->_logger = new Logger('Monolog Logger');
-            $this->_logger->pushHandler($firephp);
-        }
-
-        return $this->_logger;
-    }
-
-    public function getBootstrap()
-    {
-        return $this->getApplication()->getBootstrap();
-    }
-
-    public function getEm()
-    {
-        return $this->getBootstrap()->getEm();
-    }
+    protected $_data = array();
 
     public function getRequest()
     {
-        return $this->getApplication()->getRequest();
+        return $this->_request;
+    }
+
+    public function getSession()
+    {
+        return $this->getRequest()->getSession();
+    }
+
+    public function getMatches()
+    {
+        return $this->_matches;
+    }
+
+    public function getMatch($key)
+    {
+        return $this->_matches->get($key);
     }
 
     public function getPost()
     {
         $post = false;
+
         if ($this->getRequest()->isMethod('POST')) {
             $post = $this->getRequest()->request->all();
         }
@@ -62,58 +75,42 @@ class MasterController
         return $post;
     }
 
-    public function getMatches()
+    public function getEm()
     {
-        return $this->getApplication()->getMatches();
+        return $this->_em;
     }
 
-    public function getMatch($key)
+    protected  function getLogger()
     {
-        return $this->getApplication()->getMatch($key);
+        return $this->_logger;
     }
 
     public function getTwig()
     {
-        return $this->getApplication()->getTwig();
-    }
-
-    public function setView($action)
-    {
-        $view = preg_replace('/Action$/', '', $action);
-        $this->_view = lcfirst($view);
+        return $this->_twig;
     }
 
     public function getView()
     {
-        return $this->_view . '.html.twig';
+        return $this->_view;
     }
 
-    public function addContext($name, $value)
+    public function addData($name, $value)
     {
-        $this->_context[$name] = $value;
+        $this->_data[$name] = $value;
     }
 
-    public function getContext()
+    public function getData()
     {
-        return $this->_context;
-    }
-
-    public function getTemplate()
-    {
-        $namespacedControllerName = $this->getMatch('controller');
-        $controller = preg_replace('/Controller$/', '', basename($namespacedControllerName));
-        $bundle = preg_replace('/Bundles(.*)Controllers/', '$1', stripslashes(dirname($namespacedControllerName)));
-
-        $template = $controller . '/' . $this->getView();
-        $namespace = '@' . $bundle;
-
-        return $namespace . '/' . $template;
+        return $this->_data;
     }
 
     public function execute()
     {
-        $action = $this->getMatch('action');
-        $this->setView($action);
+        $matches = $this->getMatches();
+        $this->_view = new View($matches);
+
+        $action = $matches->get('action');
         $this->$action();
 
         if (empty($this->_redirect)) {
@@ -132,15 +129,17 @@ class MasterController
 
     public function redirect($name, $parameters = array(), $relative = false)
     {
-        $ext = new RoutingExtension($this->getApplication()->getUrlGenerator());
+        $ext = new RoutingExtension($this->_urlGenerator);
         $this->_redirect = $ext->getPath($name, $parameters, $relative);
     }
 
     public function render()
     {
+        $template = $this->_view->get();
+
         return $this->getTwig()->render(
-            $this->getTemplate(),
-            $this->getContext()
+            $template,
+            $this->getData()
         );
     }
 }

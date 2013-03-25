@@ -28,8 +28,12 @@ class Kernel
 
     protected function __construct($connectionOptions, $applicationOptions)
     {
+        $bootstrap = Bootstrap::getInstance($connectionOptions, $applicationOptions);
+
         $this->addConfigurationEntries(array(
-            'doctrine.bootstrap' => Bootstrap::getInstance($connectionOptions, $applicationOptions),
+            'options.connection' => $connectionOptions,
+            'options.application' => $bootstrap->getApplicationOptions(),
+            'doctrine.bootstrap' => $bootstrap,
             'doctrine.cache' => function(Container $c)
             {
                 return Kernel::getCache($c);
@@ -37,11 +41,6 @@ class Kernel
             'doctrine.em' => function(Container $c)
             {
                 return Kernel::getEntityManager($c);
-            },
-            'connectionOptions' => $connectionOptions,
-            'applicationOptions' => function(Container $c)
-            {
-                return Kernel::getApplicationOptions($c);
             },
             'request' => function(Container $c)
             {
@@ -63,7 +62,7 @@ class Kernel
             {
                 return Kernel::getMatches($c);
             },
-            'router.url_generator' => function(Container $c)
+            'router.generator.url' => function(Container $c)
             {
                 return Kernel::getUrlGenerator($c);
             },
@@ -102,11 +101,6 @@ class Kernel
         return $c['doctrine.bootstrap']->getEm();
     }
 
-    public static function getApplicationOptions($c)
-    {
-        return $c['doctrine.bootstrap']->getApplicationOptions();
-    }
-
     public static function getRequest($c)
     {
         $request = Request::createFromGlobals();
@@ -129,9 +123,9 @@ class Kernel
 
     public static function getRouter($c)
     {
-        $src =  $c['applicationOptions']['src'];
+        $src =  $c['options.application']->get('src'); // TODO: automatic
         foreach ($src as $bundle) {
-            $dirs[] = $c['applicationOptions']['srcDir'] . '/Bundles/' . $bundle . '/Controllers';
+            $dirs[] = $c['options.application']->get('src_dir') . '/Bundles/' . $bundle . '/Controllers';
         }
 
         $router = new Router(
@@ -184,16 +178,16 @@ class Kernel
         static $twig;
 
         if ($twig === null) {
-            $srcDir = $c['applicationOptions']['srcDir'];
-            $libDir = __DIR__ . '/MVC/Views/Templates';
+            $srcDir = $c['options.application']->get('src_dir');
+            $templateDir = __DIR__ . '/MVC/Views/Templates';
 
             $isDebug = $c['doctrine.bootstrap']->isDebug();
 
             $loader = new \Twig_Loader_Filesystem(
-                array($libDir)
+                array($templateDir)
             );
 
-            $src =  $c['applicationOptions']['src'];
+            $src =  $c['options.application']->get('src'); // TODO: automatic
             foreach ($src as $bundle) {
                 $bundleViews = $srcDir . '/Bundles/' . $bundle . '/Templates';
                 $loader->addPath(
@@ -209,7 +203,7 @@ class Kernel
             );
 
             $twig->addExtension(
-                new \Symfony\Bridge\Twig\Extension\RoutingExtension($c['router.url_generator'])
+                new \Symfony\Bridge\Twig\Extension\RoutingExtension($c['router.generator.url'])
             );
 
             if ($isDebug) {

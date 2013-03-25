@@ -27,17 +27,7 @@ class Framework
     protected function __construct($connectionOptions, $applicationOptions)
     {
         $this->_connectionOptions = $connectionOptions;
-
-        $vendorDir = realpath(__DIR__ . '/../../../..');
-        $baseDir = dirname($vendorDir);
-        $srcDir = $baseDir . '/src';
-
-        $defaultApp = array(
-            'vendorDir' => $vendorDir,
-            'baseDir' => $baseDir,
-            'srcDir' => $srcDir
-        );
-        $this->_applicationOptions = $defaultApp + $applicationOptions;
+        $this->_applicationOptions = $applicationOptions;
     }
 
     protected function __clone()
