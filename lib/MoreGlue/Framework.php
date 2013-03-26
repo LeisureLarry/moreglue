@@ -7,7 +7,7 @@ use \MoreGlue\Framework\Application;
 
 class Framework
 {
-    const VERSION = '0.1-ALPHA1';
+    const VERSION = '0.1-ALPHA3';
 
     protected static $_singletonInstance = null;
 
