@@ -24,9 +24,9 @@
         "mnapoli/php-di": "~2.1.0",
         "monolog/monolog": "~1.4.0",
         "doctrine/orm":"~2.3.2",
-        "doctrine/doctrine-bundle": "v1.2.0-beta1",
-        "doctrine/migrations": "v1.0.0-ALPHA1",
-        "doctrine/data-fixtures": "v1.0.0-ALPHA3",
+        "doctrine/doctrine-bundle": ">=v1.2.0-beta1@beta",
+        "doctrine/migrations": ">=v1.0.0-ALPHA1@alpha",
+        "doctrine/data-fixtures": ">=v1.0.0-ALPHA3@alpha",
         "webmasters/doctrine-extensions": "~2.3.4",
         "Respect/Validation": "~0.4.4",
         "ircmaxell/password-compat": "~1.0.0",
@@ -36,7 +36,6 @@
     "autoload": {
         "psr-0": { "MoreGlue": "lib/" }
     },
-    "minimum-stability": "dev",
     "extra": {
         "branch-alias": {
             "dev-master": "0.1.x-dev"
