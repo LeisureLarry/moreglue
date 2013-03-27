@@ -36,7 +36,7 @@ class ConsoleRunner extends Doctrine\ConsoleRunner
             new \MoreGlue\Doctrine\Tools\Console\Command\FixtureCommand(),
 
             // MoreGlue Symfony Commands
-            //new \MoreGlue\Symfony\Tools\Console\Command\RouterDebugCommand(),
+            new \MoreGlue\Symfony\Tools\Console\Command\RouterDebugCommand(),
 
             // MoreGlue Framework Commands
             new \MoreGlue\Framework\Tools\Console\Command\PhpStormCommand()

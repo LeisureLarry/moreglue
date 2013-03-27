@@ -2,12 +2,13 @@
 
 namespace MoreGlue;
 
+use \FuelPHP\Alias\Manager as AliasManager;
 use \Webmasters\Doctrine\Bootstrap;
 use \MoreGlue\Framework\Application;
 
 class Framework
 {
-    const VERSION = '0.1-ALPHA3';
+    const VERSION = '0.1-ALPHA4';
 
     protected static $_singletonInstance = null;
 
@@ -28,6 +29,18 @@ class Framework
     {
         $this->_connectionOptions = $connectionOptions;
         $this->_applicationOptions = $applicationOptions;
+
+        // Create a new alias manager
+        $manager = new AliasManager();
+
+        // Register the manager as prepended autoloader
+        $manager->register();
+
+        // Alias some classes
+        $manager->alias(array(
+             'Doctrine\Bundle\DoctrineBundle\Command\DoctrineCommand' => 'MoreGlue\Doctrine\Tools\Console\Command\DoctrineCommand',
+             'Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand' => 'MoreGlue\Symfony\Tools\Console\Command\ContainerAwareCommand'
+        ));
     }
 
     protected function __clone()
